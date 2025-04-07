@@ -69,6 +69,28 @@ pipeline {
                             echo "Running tests for ${svc}"
                             sh 'mvn clean test'
                             junit 'target/surefire-reports/*.xml'
+                            
+                            sh 'mvn jacoco:report'
+
+                            // Get Code Coverage
+                            def codeCoverages = []
+                            def coverageReport = readFile(file: "target/site/jacoco/index.html")
+                            def matcher = coverageReport =~ /<tfoot>(.*?)<\/tfoot>/
+                            if (matcher.find()) {
+                                def coverageMatch = matcher[0]
+                                def instructionMatcher = coverageMatch =~ /<td class="ctr2">(.*?)%<\/td>/
+                                if (instructionMatcher.find()) {
+                                    def coverage = instructionMatcher[0][1]
+                                    echo "Overall code coverage of ${svc}: ${coverage}%"
+
+                                    // Kiểm tra coverage có đạt yêu cầu không
+                                    if (coverage.toFloat() < env.MIN_COVERAGE.toInteger()) {
+                                        error("Coverage for ${svc} is too low (${coverage}%), must be >= ${env.MIN_COVERAGE}%")
+                                    } else {
+                                        echo "Coverage OK (${coverage}%)"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
