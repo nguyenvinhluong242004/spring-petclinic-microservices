@@ -10,7 +10,7 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Add for test jenkins
+// Add for testing jenkins
 class PetTest {
 
     private Pet pet;
