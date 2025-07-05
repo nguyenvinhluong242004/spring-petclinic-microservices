@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.samples.petclinic.vets.model.Specialty;
 import org.springframework.samples.petclinic.vets.model.Vet;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
