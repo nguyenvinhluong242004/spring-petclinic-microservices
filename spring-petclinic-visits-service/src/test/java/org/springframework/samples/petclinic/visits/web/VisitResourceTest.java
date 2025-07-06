@@ -80,6 +80,7 @@ class VisitResourceTest {
 
     @Test
     void shouldReadVisitsByPetId() throws Exception {
+        // Test
         Visit visit = new Visit();
         visit.setId(1);
         visit.setPetId(999);
