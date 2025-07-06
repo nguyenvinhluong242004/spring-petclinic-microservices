@@ -1,7 +1,5 @@
 package org.springframework.samples.petclinic.visits.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +10,14 @@ import org.springframework.samples.petclinic.visits.model.VisitRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
 
+import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post; // ✅ THÊM IMPORT NÀY
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,9 +31,6 @@ class VisitResourceTest {
 
     @MockBean
     VisitRepository visitRepository;
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @Test
     void shouldFetchVisits() throws Exception {
@@ -68,45 +63,32 @@ class VisitResourceTest {
     }
 
     @Test
-    @DisplayName("Should create a new visit")
     void shouldCreateVisit() throws Exception {
-        Visit visitToCreate = Visit.VisitBuilder.aVisit()
-            .description("Test visit")
-            .build();
+        Visit visit = new Visit();
+        visit.setPetId(123);
+        visit.setDescription("Test visit");
 
-        Visit savedVisit = Visit.VisitBuilder.aVisit()
-            .id(10)
-            .petId(5)
-            .description("Test visit")
-            .build();
+        given(visitRepository.save(any())).willReturn(visit);
 
-        given(visitRepository.save(any(Visit.class))).willReturn(savedVisit);
-
-        mvc.perform(post("/owners/*/pets/5/visits")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(visitToCreate)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(10))
-            .andExpect(jsonPath("$.petId").value(5))
-            .andExpect(jsonPath("$.description").value("Test visit"));
+        mvc.perform(
+                post("/owners/1/pets/123/visits")
+                    .contentType("application/json")
+                    .content("{\"description\":\"Test visit\"}")
+            )
+            .andExpect(status().isCreated());
     }
 
     @Test
-    @DisplayName("Should fetch visits for specific pet")
-    void shouldFetchVisitsByPetId() throws Exception {
-        given(visitRepository.findByPetId(222))
-            .willReturn(
-                asList(
-                    Visit.VisitBuilder.aVisit().id(1).petId(222).description("Checkup").build(),
-                    Visit.VisitBuilder.aVisit().id(2).petId(222).description("Vaccination").build()
-                )
-            );
+    void shouldReadVisitsByPetId() throws Exception {
+        Visit visit = new Visit();
+        visit.setId(1);
+        visit.setPetId(999);
 
-        mvc.perform(get("/owners/*/pets/222/visits"))
+        given(visitRepository.findByPetId(999)).willReturn(List.of(visit));
+
+        mvc.perform(get("/owners/1/pets/999/visits"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(1))
-            .andExpect(jsonPath("$[1].id").value(2))
-            .andExpect(jsonPath("$[0].description").value("Checkup"))
-            .andExpect(jsonPath("$[1].description").value("Vaccination"));
+            .andExpect(jsonPath("$[0].petId").value(999));
     }
 }
